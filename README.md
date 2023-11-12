@@ -1,2 +1,1 @@
-# vtdi-queue-client
-A python script to act as a clientside interface between [video-to-terminal](https://github.com/Like4Schnitzel/video-to-terminal) and [vtdi-queue-interface](https://github.com/Like4Schnitzel/vtdi-queue-interface).
+Moved to [vtdi-queue-interface](https://github.com/Like4Schnitzel/vtdi-queue-interface).
