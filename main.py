@@ -1,11 +1,14 @@
+from pprint import pprint
 from json import load
 from json import loads
+from requests import get
 from sseclient import SSEClient
 
 env_json = open('env.json', encoding='utf-8')
 env_vars = load(env_json)
 
-queue = []
+queue = loads(get(f'{env_vars["URL"]}/queue', timeout=5).text)['videos']
+pprint(queue)
 
 messages = SSEClient(f'{env_vars["URL"]}/api/sse')
 
@@ -14,4 +17,4 @@ for msg in messages:
         queue.append(loads(msg.data))
     if msg.event == 'queueItemRemoved':
         queue.pop(loads(msg.data))
-    print(queue)
+    pprint(queue)
