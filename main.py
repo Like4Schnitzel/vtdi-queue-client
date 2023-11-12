@@ -1,5 +1,8 @@
 from os import remove
+from subprocess import Popen
+from subprocess import PIPE
 from threading import Thread
+from sys import stdout
 from pprint import pprint
 from json import load
 from json import loads
@@ -22,6 +25,20 @@ def handle_queue_item(item, src_dir):
     with YoutubeDL(ydl_ops) as ydl:
         ydl.download([item["url"]])
 
+    # transcode video
+    transcode_process = Popen([
+        f'{src_dir}/build/Transcoder',
+        '--path',
+        file_location,
+        '--width',
+        str(item["width"]),
+        '--height',
+        str(item["height"]),
+        '-y'
+        ], stdout=PIPE)
+    for c in iter(lambda: transcode_process.stdout.read(1), b''):
+        stdout.buffer.write(c)
+
 def main():
     env_json = open('env.json', encoding='utf-8')
     env_vars = load(env_json)
@@ -40,10 +57,10 @@ def main():
 
         elif msg.event == 'queueItemRemoved':
             queue_index = loads(msg.data)
-            item = queue[queue_index]
-            video_id = item["url"][item["url"].rfind('=')+1:]
-            file_location = f'{env_vars["VTDI_SRC_DIR"]}/data/queue/{string_to_valid_filename(item["info"]["title"])}_{video_id}.mp4'
-            remove(file_location)
+            #item = queue[queue_index]
+            #video_id = item["url"][item["url"].rfind('=')+1:]
+            #file_location = f'{env_vars["VTDI_SRC_DIR"]}/data/queue/{string_to_valid_filename(item["info"]["title"])}_{video_id}.mp4'
+            #remove(file_location)
             queue.pop(queue_index)
 
 if __name__ == '__main__':
