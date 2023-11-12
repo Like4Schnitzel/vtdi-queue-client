@@ -1,4 +1,5 @@
 from os import remove
+from threading import Thread
 from pprint import pprint
 from json import load
 from json import loads
@@ -26,6 +27,8 @@ def main():
     env_vars = load(env_json)
 
     queue = loads(get(f'{env_vars["URL"]}/queue', timeout=5).text)['videos']
+    for video in queue:
+        Thread(target=handle_queue_item, args=[video, env_vars["VTDI_SRC_DIR"]]).start()
 
     messages = SSEClient(f'{env_vars["URL"]}/api/sse')
 
@@ -34,7 +37,8 @@ def main():
             queue_item = loads(msg.data)
             queue.append(queue_item)
             handle_queue_item(queue_item, env_vars["VTDI_SRC_DIR"])
-        if msg.event == 'queueItemRemoved':
+
+        elif msg.event == 'queueItemRemoved':
             queue_index = loads(msg.data)
             item = queue[queue_index]
             video_id = item["url"][item["url"].rfind('=')+1:]
