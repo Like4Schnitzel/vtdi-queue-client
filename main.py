@@ -1,3 +1,4 @@
+from os import remove
 from pprint import pprint
 from json import load
 from json import loads
@@ -25,18 +26,21 @@ def main():
     env_vars = load(env_json)
 
     queue = loads(get(f'{env_vars["URL"]}/queue', timeout=5).text)['videos']
-    #pprint(queue)
 
     messages = SSEClient(f'{env_vars["URL"]}/api/sse')
 
     for msg in messages:
         if msg.event == 'queueItemAdded':
-            queueItem = loads(msg.data)
-            queue.append(queueItem)
-            handle_queue_item(queueItem, env_vars["VTDI_SRC_DIR"])
+            queue_item = loads(msg.data)
+            queue.append(queue_item)
+            handle_queue_item(queue_item, env_vars["VTDI_SRC_DIR"])
         if msg.event == 'queueItemRemoved':
-            queue.pop(loads(msg.data))
-        #pprint(queue)
+            queue_index = loads(msg.data)
+            item = queue[queue_index]
+            video_id = item["url"][item["url"].rfind('=')+1:]
+            file_location = f'{env_vars["VTDI_SRC_DIR"]}/data/queue/{string_to_valid_filename(item["info"]["title"])}_{video_id}.mp4'
+            remove(file_location)
+            queue.pop(queue_index)
 
 if __name__ == '__main__':
     main()
